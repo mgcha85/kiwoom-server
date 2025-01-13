@@ -1,0 +1,15 @@
+chejan_data_mapping:
+  9203: "order_num"       # 주문번호
+  9001: "code"            # 종목코드
+  905: "order_type"       # 주문유형
+  900: "qty"              # 주문수량
+  902: "remain_qty"       # 남은수량
+  903: "cum_price"        # 체결가격합계
+  938: "fee"              # 수수료
+  939: "tax"              # 세금
+  913: "status"           # 주문상태
+  302: "name"             # 종목명
+  904: "org_order_num"    # 원주문번호
+  906: "trade_type"       # 매매구분
+  908: "order_time"       # 주문시간
+  909: "receive_num"      # 체결번호
