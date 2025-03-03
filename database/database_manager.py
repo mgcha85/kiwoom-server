@@ -83,6 +83,8 @@ def update_hold_list_and_trade_history(order_response, db_path="sqlite3/trading.
     tax = float(order_response["tax"])
     due_date = order_response["due_date"]
 
+    print(code, qty, cum_price // qty, remain_qty, order_id, 0, due_date)
+
     if "매수" in order_type:  # 매수 완료 시
         # hold_list 추가 또는 업데이트 (이미 존재한 경우)
         cursor.execute("""
@@ -106,9 +108,11 @@ def update_hold_list_and_trade_history(order_response, db_path="sqlite3/trading.
         # hold_list에서 데이터 가져오기
         cursor.execute("SELECT avg_price, qty, fee, tax FROM hold_list WHERE code=?", (code,))
         hold_data = cursor.fetchone()
+        print(hold_data)
 
         if hold_data:
             hold_avg_price, hold_qty, hold_fee, hold_tax = hold_data
+            print(hold_avg_price, hold_qty, hold_fee, hold_tax)
 
             # 매도 후 수익 계산
             sell_price = cum_price // qty

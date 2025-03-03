@@ -13,3 +13,6 @@ chejan_data_mapping:
   906: "trade_type"       # 매매구분
   908: "order_time"       # 주문시간
   909: "receive_num"      # 체결번호
+
+db_path: "../kiwoom-client/sqlite3/trading.sqlite3"
+account_no: "5241247710"

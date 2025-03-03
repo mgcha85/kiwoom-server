@@ -22,7 +22,11 @@ class OrderService:
         account_no = self.kiwoom.get_login_info("ACCNO").split(";")[0]
         print(code, quantity, price)
 
-        self.kiwoom.send_order("매도주문", "0101", account_no, 2, code, quantity, price, hogaType, "")
+        try:
+            self.kiwoom.send_order("매도주문", "0101", account_no, 2, code, quantity, price, hogaType, "", None)
+        except Exception as e:
+            print(e)
+
         print("order_no: ", self.kiwoom.order_no)
         return self.kiwoom.order_data
 

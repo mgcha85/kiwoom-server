@@ -16,13 +16,13 @@ class StockService:
             return {
                 "code": stock_data['code'],
                 "name": stock_data['name'],
-                "price": int(stock_data['price'].replace('+', '')),
+                "price": int(stock_data['price'].replace('+', '').replace('-', '')),
                 "volume": int(stock_data['volume']),
                 "change": 0  # Add default change value or get from Kiwoom API
             }
         except Exception as e:
             return {"error": str(e)}
-        
+
     def get_daily_data(self, code: str, start_date: str, end_date: str) -> List[Dict[str, str]]:
         """일봉 데이터 조회"""
         self.kiwoom.repeat = 60

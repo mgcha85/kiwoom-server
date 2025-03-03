@@ -21,6 +21,7 @@ config = open_yaml('common/config.yaml')
 kiwoom = Kiwoom(config)
 kiwoom.comm_connect()  # 로그인
 kiwoom.set_account()
+print("account no: " + kiwoom.get_account())
 
 # 서비스 초기화
 account_service = AccountService(kiwoom)

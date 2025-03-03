@@ -70,7 +70,13 @@ class Kiwoom(QAxWidget):
     def get_account(self):
         cnt = int(self.get_login_info("ACCOUNT_CNT"))
         accountList = self.get_login_info("ACCNO").split(';')
-        return accountList[:cnt][0]
+        accountList = accountList[:cnt]
+        try:
+            idx = accountList.index(self.config['account_no'])
+        except ValueError:
+            raise('해당 account가 없습니다.')
+        
+        return accountList[idx]
 
     def event_connect(self, return_code):
         """로그인 이벤트 핸들러"""
@@ -91,7 +97,7 @@ class Kiwoom(QAxWidget):
 
     def receive_tr_data(self, screen_no, request_name, tr_code, record_name, inquiry):
         """TR 데이터 수신 이벤트 핸들러"""
-        print(f"TR 데이터 수신: {request_name}")
+        print(f"TR 데이터 수신: {request_name}, account no: {self.get_account()}")
         self.order_no = self.get_comm_data(tr_code, request_name, 0, "주문번호")
         print("order_no: ", self.order_no)
         
@@ -144,36 +150,50 @@ class Kiwoom(QAxWidget):
             "출금가능금액": self.get_comm_data(tr_code, request_name, 0, "출금가능금액"),
         }
         return data
-    
+
+    def set_order_data(self, fid_list):
+        # 주문 데이터 생성
+        order_data = {}
+        for fid in map(int, fid_list.split(';')):
+            if fid in self.config['chejan_data_mapping']:
+                key = self.config['chejan_data_mapping'][fid]
+
+                if key == 'order_time':
+                    value = datetime.now().strftime('%Y%m%d') + self.get_chejan_data(fid).strip() # 시간만 있기 때문에 날짜를 더한다.
+                elif key == 'code':
+                    value = self.get_chejan_data(fid).strip()[1:] # prefix remove
+                else:
+                    value = self.get_chejan_data(fid).strip()
+                
+                order_data[key] = value
+        return order_data
+
     def receive_chejan_data(self, gubun, item_cnt, fid_list):        
         """체결 데이터 수신 이벤트 핸들러"""
         print(f"체결 데이터 수신: {gubun}")
 
-        # 주문 데이터 생성
-        self.order_data = {}
-        for fid in map(int, fid_list.split(';')):
-            if fid in self.config['chejan_data_mapping']:
-                key = self.config['chejan_data_mapping'][fid]
-                if key == 'order_time':
-                    value = datetime.now().strftime('%Y%m%d') + self.get_chejan_data(fid).strip()
-                else:
-                    value = self.get_chejan_data(fid).strip()
-                self.order_data[key] = value
+        self.order_data = self.set_order_data(fid_list)
 
-        print(self.order_data)
+        # Order시 저장
+        db_path = self.config['db_path']
+        insert_order_response(self.order_data, db_path)
+
         if gubun != '0':
+            if self.order_loop:
+                self.order_loop.exit()
             return
 
-        # 주문 데이터 저장
-        if len(self.order_data) > 0:
-            # Order시 저장
-            db_path="../kiwoom-client/sqlite3/trading.sqlite3"        
-            insert_order_response(self.order_data, db_path)
-            
-            # 체결시 저장
-            if self.order_data['remain_qty'] == '0':
-                self.order_data['due_date'] = self.due_date
-                update_hold_list_and_trade_history(self.order_data, db_path)
+        if self.order_data['cum_price'] == '0':
+            if self.order_loop:
+                self.order_loop.exit()
+            return
+        
+        print(self.order_data)
+
+        # 체결시 저장
+        if self.order_data['remain_qty'] == '0':
+            self.order_data['due_date'] = self.due_date
+            update_hold_list_and_trade_history(self.order_data, db_path)
 
         if self.order_loop:
             self.order_loop.exit()
