@@ -172,16 +172,18 @@ class Kiwoom(QAxWidget):
         """체결 데이터 수신 이벤트 핸들러"""
         print(f"체결 데이터 수신: {gubun}")
 
-        self.order_data = self.set_order_data(fid_list)
-
-        # Order시 저장
-        db_path = self.config['db_path']
-        insert_order_response(self.order_data, db_path)
-
         if gubun != '0':
             if self.order_loop:
                 self.order_loop.exit()
             return
+
+        self.order_data = self.set_order_data(fid_list)
+        if 'order_num' not in self.order_data:
+            self.order_data['order_num'] = ''
+
+        # Order시 저장
+        db_path = self.config['db_path']
+        insert_order_response(self.order_data, db_path)
 
         if self.order_data['cum_price'] == '0':
             if self.order_loop:
